@@ -3,6 +3,7 @@
 #include <stdio.h>		/* C input/output                       */
 #include <stdlib.h>		/* C standard library                   */
 #include <glpk.h>		/* GNU GLPK linear/mixed integer solver */
+#include "test.h"
 
 void column_generator() {
 
@@ -12,7 +13,7 @@ void column_generator() {
 	/* create problem */
 	sous_prob = glp_create_prob();
 	glp_set_prob_name(sous_prob, "rouleaux-parfaits");
-	glp_set_obj_dir(sous_prob, GLP_MIN);
+	glp_set_obj_dir(sous_prob, GLP_MAX);
 	/* fill problem */
 	glp_add_rows(sous_prob, 4);
 	glp_set_row_name(sous_prob, 1, "taille0");
@@ -65,7 +66,7 @@ void column_generator() {
 
 
 
-void add_column(glp_prob *lp, double coef) {
+void add_column(glp_prob *lp, float coef) {
 	static int num = 1;
 	glp_add_cols(lp, 1);
 	char name[10] = "";
