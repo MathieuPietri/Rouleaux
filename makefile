@@ -1,5 +1,5 @@
 CC=gcc
-OPT=-Wall -std=c17
+OPT=-Wall -std=c11
 LIB=-lglpk
 
 all: test

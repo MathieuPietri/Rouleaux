@@ -5,7 +5,7 @@
 #include <glpk.h>		/* GNU GLPK linear/mixed integer solver */
 #include "test.h"
 
-void column_generator() {
+int *column_generator(int y1, int y2, int y3, int y4) {
 
 	glp_prob *sous_prob;
 	int ia[1 + 1000], ja[1 + 1000];
@@ -17,49 +17,41 @@ void column_generator() {
 	/* fill problem */
 	glp_add_rows(sous_prob, 4);
 	glp_set_row_name(sous_prob, 1, "taille0");
-	glp_set_row_bnds(sous_prob, 1, GLP_LO,  97.0, 0.0);
-	glp_set_row_name(sous_prob, 2, "taille1");
-	glp_set_row_bnds(sous_prob, 2, GLP_LO, 610.0, 0.0);
-	glp_set_row_name(sous_prob, 3, "taille2");
-	glp_set_row_bnds(sous_prob, 3, GLP_LO, 395.0, 0.0);
-	glp_set_row_name(sous_prob, 4, "taille3");
-	glp_set_row_bnds(sous_prob, 4, GLP_LO, 211.0, 0.0);
+	glp_set_row_bnds(sous_prob, 1, GLP_UP,  0.0, 100.0);
 
-	add_column(sous_prob, 1.0);
-	add_column(sous_prob, 1.0);
-	add_column(sous_prob, 1.0);
-	add_column(sous_prob, 1.0);
+	add_column(sous_prob, y1);
+	add_column(sous_prob, y2);
+	add_column(sous_prob, y3);
+	add_column(sous_prob, y4);
+	glp_set_col_kind(sous_prob, 1, GLP_IV);
+	glp_set_col_kind(sous_prob, 2, GLP_IV);
+	glp_set_col_kind(sous_prob, 3, GLP_IV);
+	glp_set_col_kind(sous_prob, 4, GLP_IV);
 
-	ia[1] = 1, ja[1] = 1, ar[1] = 1.0;	/* a[1,1] = 1 */
-	ia[2] = 2, ja[2] = 2, ar[2] = 1.0;	/* a[2,2] = 1 */
-	ia[3] = 3, ja[3] = 3, ar[3] = 1.0;	/* a[3,3] = 1 */
-	ia[4] = 4, ja[4] = 4, ar[4] = 1.0;	/* a[4,4] = 1 */
+	ia[1] = 1, ja[1] = 1, ar[1] = 45.0;	/* a[1,1] = a1 * 45 */
+	ia[2] = 1, ja[2] = 2, ar[2] = 36.0;	/* a[1,2] = a2 * 36 */
+	ia[3] = 1, ja[3] = 3, ar[3] = 31.0;	/* a[1,3] = a3 * 31 */
+	ia[4] = 1, ja[4] = 4, ar[4] = 14.0;	/* a[1,4] = a4 * 14 */
 	glp_load_matrix(sous_prob, 4, ia, ja, ar);
+	
 	/* solve problem */
+
 	glp_simplex(sous_prob, NULL);
-	/* recover and display results */
-	z = glp_get_obj_val(sous_prob);
-	x1 = glp_get_col_prim(sous_prob, 1);
-	x2 = glp_get_col_prim(sous_prob, 2);
-	x3 = glp_get_col_prim(sous_prob, 3);
-	x4 = glp_get_col_prim(sous_prob, 4);
-	printf("z = %g; x1 = %g; x2 = %g; x3 = %g; x4 = %g\n", z, x1, x2, x3,
-		   x4);
+	glp_intopt(sous_prob, NULL);
 
-	double y1, y2, y3, y4;
+	int *a = malloc(sizeof (int) * 5);
 
-	y1 = glp_get_row_dual(sous_prob, 1);
-	y2 = glp_get_row_dual(sous_prob, 2);
-	y3 = glp_get_row_dual(sous_prob, 3);
-	y4 = glp_get_row_dual(sous_prob, 4);
-	printf("z = %g; y1 = %g; y2 = %g; y3 = %g; y4 = %g\n", z, y1, y2, y3,
-		   y4);
+	a[1] = glp_mip_col_val(sous_prob, 1);
+	a[2] = glp_mip_col_val(sous_prob, 2);
+	a[3] = glp_mip_col_val(sous_prob, 3);
+	a[4] = glp_mip_col_val(sous_prob, 4);
 
+	printf("a1 = %g; a2 = %g; a3 = %g; a4 = %g\n", a[1], a[2], a[3], a[4]);
 	/* housekeeping */
 	glp_delete_prob(sous_prob);
 	glp_free_env();
-
-
+	
+	return a;
 	//glp_intopt(glp_prob *mip, const glp_iocp *parm);
 
 }
