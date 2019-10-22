@@ -5,4 +5,4 @@ LIB=-lglpk
 all: test
 
 test: test.c test.h
-	$(CC) $< $(OPT) $(LIB)
+	$(CC) $< $(OPT) $(LIB) -o $@
