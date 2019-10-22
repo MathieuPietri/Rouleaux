@@ -1,5 +1,5 @@
 CC=gcc
-OPT=-Wall -std=c11 -g
+OPT=-Wall -Wpedantic -std=c11 -g
 LIB=-lglpk
 
 all: test

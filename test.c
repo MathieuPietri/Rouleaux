@@ -4,7 +4,8 @@
 #include <stdlib.h>		/* C standard library                   */
 #include <glpk.h>		/* GNU GLPK linear/mixed integer solver */
 #include "test.h"
-
+int col_num = 1;
+int num_col_sp = 1;
 int *column_generator(int y1, int y2, int y3, int y4) {
 
 	glp_prob *sous_prob;
@@ -19,10 +20,11 @@ int *column_generator(int y1, int y2, int y3, int y4) {
 	glp_set_row_name(sous_prob, 1, "taille0");
 	glp_set_row_bnds(sous_prob, 1, GLP_UP,  0.0, 100.0);
 
-	add_column2(sous_prob, y1);
-	add_column2(sous_prob, y2);
-	add_column2(sous_prob, y3);
-	add_column2(sous_prob, y4);
+	num_col_sp = 1;
+	add_column_sp(sous_prob);
+	add_column_sp(sous_prob);
+	add_column_sp(sous_prob);
+	add_column_sp(sous_prob);
 	glp_set_col_kind(sous_prob, 1, GLP_IV);
 	glp_set_col_kind(sous_prob, 2, GLP_IV);
 	glp_set_col_kind(sous_prob, 3, GLP_IV);
@@ -88,17 +90,21 @@ int perfect_rolls() {
 	ia[4] = 4, ja[4] = 4, ar[4] = 1.0;	/* a[4,4] = 1 */
 
 
-	int k = 4;
+	
 	int nb_coeffs = 4;
 	double y1, y2, y3, y4;
 	int *a, z_cost;
 	do {
+		printf("nb_coeffs=%d\n", nb_coeffs);
+		for (int i = 0; i < nb_coeffs + 4; i++) {
+			printf("ar[%d]=%g\n", i, ar[i]);
+		}
+		printf("\n");
 
-		glp_load_matrix(lp, 4, ia, ja, ar);
-		printf("k=%d\n", k);
+		glp_load_matrix(lp, nb_coeffs, ia, ja, ar);
+		printf("col_num=%d\n", col_num);
 		/* solve problem */
 		glp_simplex(lp, NULL);
-
 		y1 = glp_get_row_dual(lp, 1);
 		y2 = glp_get_row_dual(lp, 2);
 		y3 = glp_get_row_dual(lp, 3);
@@ -108,11 +114,13 @@ int perfect_rolls() {
 		a = column_generator(y1, y2, y3, y4);
 		z_cost = a[0];
 		if (z_cost > 1) {
-			k = add_column(lp, 1.0);
-			ia[++nb_coeffs] = 1, ja[nb_coeffs] = k, ar[nb_coeffs] = a[1];	/* a[k,1] = a[1] */
-			ia[++nb_coeffs] = 2, ja[nb_coeffs] = k, ar[nb_coeffs] = a[2];	/* a[k,2] = a[2] */
-			ia[++nb_coeffs] = 3, ja[nb_coeffs] = k, ar[nb_coeffs] = a[3];	/* a[k,3] = a[3] */
-			ia[++nb_coeffs] = 4, ja[nb_coeffs] = k, ar[nb_coeffs] = a[4];	/* a[k,4] = a[4] */
+			for (int i = 1; i <= 4; i++)
+				printf("a[%d]=%d\n", i, a[i]);
+			add_column(lp, 1.0);
+			ia[++nb_coeffs] = 1, ja[nb_coeffs] = col_num-1, ar[nb_coeffs] = (double) a[1];	/* a[col_num,1] = a[1] */
+			ia[++nb_coeffs] = 2, ja[nb_coeffs] = col_num-1, ar[nb_coeffs] = (double) a[2];	/* a[col_num,2] = a[2] */
+			ia[++nb_coeffs] = 3, ja[nb_coeffs] = col_num-1, ar[nb_coeffs] = (double) a[3];	/* a[col_num,3] = a[3] */
+			ia[++nb_coeffs] = 4, ja[nb_coeffs] = col_num-1, ar[nb_coeffs] = (double) a[4];	/* a[col_num,4] = a[4] */
 		}
 		free(a);
 	} while (z_cost > 1);
@@ -136,30 +144,26 @@ int perfect_rolls() {
 }
 
 
-int add_column(glp_prob *lp, float coef) {
-	static int num = 1;
+void add_column(glp_prob *lp, float coef) {
 	glp_add_cols(lp, 1);
 	char name[10] = "";
-	snprintf(name, sizeof name, "rouleau%d", num);
-	glp_set_col_name(lp, num, name);
-	glp_set_col_bnds(lp, num, GLP_LO, 0.0, 0.0);
-	glp_set_obj_coef(lp, num, coef);
+	snprintf(name, sizeof name, "rouleau%d", col_num);
+	glp_set_col_name(lp, col_num, name);
+	glp_set_col_bnds(lp, col_num, GLP_LO, 0.0, 0.0);
+	glp_set_obj_coef(lp, col_num, coef);
 
-	num++;
-	return num;
+	col_num++;
 }
 
-int add_column2(glp_prob *lp, float coef) {
-	static int num = 1;
+void add_column_sp(glp_prob *lp) {
 	glp_add_cols(lp, 1);
 	char name[10] = "";
-	snprintf(name, sizeof name, "rouleau%d", num);
-	glp_set_col_name(lp, num, name);
-	glp_set_col_bnds(lp, num, GLP_LO, 0.0, 0.0);
-	glp_set_obj_coef(lp, num, coef);
+	snprintf(name, sizeof name, "rouleau%d", num_col_sp);
+	glp_set_col_name(lp, num_col_sp, name);
+	glp_set_col_bnds(lp, num_col_sp, GLP_LO, 0.0, 0.0);
+	glp_set_obj_coef(lp, num_col_sp, 1.0);
 
-	num++;
-	return num;
+	num_col_sp++;
 }
 
 int main(void) {

@@ -4,5 +4,5 @@
 #endif
 
 int *column_generator();
-int add_column(glp_prob *lp, float coef);
-int add_column2(glp_prob *lp, float coef);
+void add_column(glp_prob *lp, float coef);
+void add_column_sp(glp_prob *lp);
